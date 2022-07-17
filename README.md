@@ -1,4 +1,4 @@
-# Code Generation Language Model Evaluation Harness
+# Code Generation LM Evaluation Harness
 
 A framework for the evaluation of autoregressive code generation language models. 
 
@@ -7,7 +7,7 @@ A framework for the evaluation of autoregressive code generation language models
 This project provides a unified framework to test autoregressive code generation language models.
 
 Features:
-- Any autoregressive model available on [Hugging Face hub](https://huggingface.co/) can be used, but we recommand using a code generation models trained specifically on Code such as [CodeParrot](https://huggingface.co/codeparrot/codeparrot), [InCoder](https://huggingface.co/facebook/incoder-6B) and [CodeGen](https://huggingface.co/Salesforce/codegen-16B-mono).
+- Any autoregressive model available on [Hugging Face hub](https://huggingface.co/) can be used, but we recommend using a code generation models trained specifically on Code such as [CodeParrot](https://huggingface.co/codeparrot/codeparrot), [InCoder](https://huggingface.co/facebook/incoder-6B) and [CodeGen](https://huggingface.co/Salesforce/codegen-16B-mono).
 - 3 tasks implemented: [HumanEval](https://huggingface.co/datasets/openai_humaneval), [APPS](https://huggingface.co/datasets/codeparrot/apps) and [MBPP](https://huggingface.co/datasets/mbpp).
 
 
