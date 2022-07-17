@@ -4,7 +4,7 @@ import fnmatch
 from arguments import EvalArguments
 from transformers import  AutoModelForCausalLM, AutoTokenizer, HfArgumentParser
 
-from lm_eval import Evaluator
+from lm_eval.evaluator import Evaluator
 
 ALL_TASKS = ["humaneval", "apps", "mbpp", "all"]
 
