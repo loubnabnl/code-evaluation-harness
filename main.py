@@ -7,7 +7,7 @@ from transformers import  AutoModelForCausalLM, AutoTokenizer, HfArgumentParser
 from arguments import EvalArguments
 from lm_eval.evaluator import Evaluator
 
-ALL_TASKS = ["humaneval", "apps", "mbpp", "all"]
+ALL_TASKS = ["humaneval", "apps", "mbpp"]
 
 class MultiChoice:
     def __init__(self, choices):
