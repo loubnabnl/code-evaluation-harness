@@ -5,8 +5,8 @@ from transformers import set_seed
 from datasets import load_dataset
 from evaluate import load
 
-import apps_utils
-import humaneval_mbpp_utils
+from lm_eval import apps_utils
+from lm_eval import humaneval_mbpp_utils
 
 _WARNING = """
 ################################################################################
