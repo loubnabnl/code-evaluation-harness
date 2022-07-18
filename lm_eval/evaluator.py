@@ -22,7 +22,7 @@ does not perform destructive actions on their host or network. For more
 information on how OpenAI sandboxes its code, see the paper "Evaluating Large
 Language Models Trained on Code" (https://arxiv.org/abs/2107.03374).
 Once you have read this disclaimer and taken appropriate precautions, set the argument 
-"allow_code_execution" to 1.
+"allow_code_execution" to True.
 ################################################################################\
 """
 
@@ -37,7 +37,7 @@ class Evaluator():
         self.seed = args.seed
 
         # code evaluation permission
-        self.allow_code_evaluation = args.allow_code_evaluation
+        self.allow_code_execution = args.allow_code_execution
 
         # evaluation dataset arguments
         self.level_apps = args.level_apps
@@ -66,10 +66,9 @@ class Evaluator():
 
     def evaluate(self, task):
 
-        if not self.allow_code_evaluation:
-            print("Code evaluation is not enabled. Read the warning below carefully and then\
-                 use `--allow_code_evaluation=True` flag to enable code evaluation.")
-            raise ValueError(_WARNING)
+        if not self.allow_code_execution:
+            print(_WARNING)
+            raise ValueError("Code evaluation is not enabled. Read the warning above carefully and then use `--allow_code_execution=True` flag to enable code evaluation.")
         generations, references = self.generate_text(task)
 
         if task == "apps":
