@@ -16,6 +16,7 @@ Features:
 ```bash
 git clone https://github.com/loubnabnl/code-evaluation-harness.git
 cd code-evaluation-harness
+pip install -r requirements.txt
 ```
 
 ## Basic Usage
