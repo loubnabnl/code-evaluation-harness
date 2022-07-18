@@ -1,9 +1,10 @@
 import json
 import fnmatch
 
-from arguments import EvalArguments
+import transformers
 from transformers import  AutoModelForCausalLM, AutoTokenizer, HfArgumentParser
 
+from arguments import EvalArguments
 from lm_eval.evaluator import Evaluator
 
 ALL_TASKS = ["humaneval", "apps", "mbpp", "all"]
@@ -49,7 +50,8 @@ def pattern_match(patterns, source_list):
 
 def main():
     args = parse_args()
-
+    transformers.logging.set_verbosity_error()
+    
     if args.tasks is None:
         task_names = ALL_TASKS
     else:
@@ -60,7 +62,7 @@ def main():
     model = AutoModelForCausalLM.from_pretrained(args.model)
     tokenizer = AutoTokenizer.from_pretrained(args.model)
     tokenizer.pad_token = tokenizer.eos_token
-
+    
     evaluator = Evaluator(model, tokenizer, args)
     results = {}
     for task in task_names:
