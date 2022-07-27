@@ -5,8 +5,9 @@ from transformers import set_seed
 from datasets import load_dataset
 from evaluate import load
 
-from lm_eval import apps_utils
-from lm_eval import humaneval_mbpp_utils
+from lm_eval import apps_generation
+from lm_eval import humaneval_generation
+from lm_eval import mbpp_generation
 
 _WARNING = """
 ################################################################################
@@ -48,17 +49,17 @@ class Evaluator():
 
         if task == "apps":
             dataset = load_dataset("codeparrot/apps", split="test", difficulties=[self.level_apps])
-            generations = apps_utils.make_generations(self.model, self.tokenizer, dataset, self.args, self.args.num_tasks_apps)
+            generations = apps_generation.make_parallel_generations(self.model, self.tokenizer, dataset, self.args, self.args.num_tasks_apps)
             return generations, None
 
         elif task == "humaneval":
             dataset = load_dataset("openai_humaneval", split="test")
-            generations, references = humaneval_mbpp_utils.make_generations(self.model, self.tokenizer, dataset, self.args, self.args.num_tasks_humaneval)
-            return generations, references
+            generations, references = humaneval_generation.make_parallel_generations(self.model, self.tokenizer, dataset, self.args, self.args.num_tasks_humaneval)
+            return generations, referencesnum_tasks_humaneval
 
         elif task == "mbpp":
             dataset = load_dataset("mbpp", split="test")
-            generations, references = humaneval_mbpp_utils.make_generations(self.model, self.tokenizer, dataset, self.args, self.args.num_tasks_mbpp)
+            generations, references = mbpp_generation.make_generations(self.model, self.tokenizer, dataset, self.args, self.args.num_tasks_mbpp)
             return generations, references
 
         else:
@@ -72,7 +73,7 @@ class Evaluator():
         generations, references = self.generate_text(task)
 
         if task == "apps":
-            code_metric = load("loubnabnl/apps_metric2")
+            code_metric = load("codeparrot/apps_metric")
             results = code_metric.compute(predictions=generations)
 
         else:
