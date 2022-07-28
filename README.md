@@ -32,19 +32,19 @@ Below are some examples to evaluate a model (CodeParrot and fine-tuned GPT2 on A
 accelerate launch main.py \
 	--model codeparrot/codeparrot \
 	--tasks humaneval,apps \
-    --allow_code_execution=False
+	--allow_code_execution=False
    
 #to evaluate only on some APPS samples 
 accelerate launch main.py \
 	--model codeparrot/codeparrot  \
 	--tasks apps \
-    --level_apps introductory \
-    --num_tasks_apps 4 \
-    --allow_code_execution=False
+	--level_apps introductory \
+	--num_tasks_apps 4 \
+	--allow_code_execution=False
 ```
 
 ## Acknowledgements
 This repository is inspired from [EleutherAI's LM evaluation harness](https://github.com/EleutherAI/lm-evaluation-harness).
 
 ## To do:
-- [ ] add MBPP benchmark: different prompt format and code generation
+- [ ] add MBPP benchmark
