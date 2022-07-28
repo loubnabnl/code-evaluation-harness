@@ -18,17 +18,33 @@ git clone https://github.com/loubnabnl/code-evaluation-harness.git
 cd code-evaluation-harness
 pip install -r requirements.txt
 ```
-
-## Basic Usage
-
-To evaluate a model, (e.g. CodeParrot) on HumanEval and APPS benchmarks, you can run the following command:
+We used `accelerate` to generate code in parallel when multiple GPUs are present. You can configure it using:
 
 ```bash
-python main.py \
+accelerate config
+```
+## Basic Usage
+
+Below are some examples to evaluate a model (CodeParrot and fine-tuned GPT2 on APPS) on HumanEval and APPS benchmarks:
+
+```bash
+#to run both evaluation on Codeparrot with default parameters
+accelerate launch main.py \
 	--model codeparrot/codeparrot \
-	--device 0 \
-	--tasks humaneval,apps
+	--tasks humaneval,apps \
+    --allow_code_execution=False
+   
+#to evaluate only on some APPS samples 
+accelerate launch main.py \
+	--model codeparrot/codeparrot  \
+	--tasks apps \
+    --level_apps introductory \
+    --num_tasks_apps 4 \
+    --allow_code_execution=False
 ```
 
 ## Acknowledgements
 This repository is inspired from [EleutherAI's LM evaluation harness](https://github.com/EleutherAI/lm-evaluation-harness).
+
+## To do:
+- [ ] add MBPP benchmark: different prompt format and code generation
