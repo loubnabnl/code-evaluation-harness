@@ -48,3 +48,4 @@ This repository is inspired from [EleutherAI's LM evaluation harness](https://gi
 
 ## To do:
 - [ ] add MBPP benchmark
+- [ ] add a table with CodeParrot evaluation scores
