@@ -58,9 +58,10 @@ class TokenizedDataset(IterableDataset):
     def __iter__(self):
         prompts = []
         for task in range(self.n_tasks):
-            prompt = self.dataset[task]["prompt"].strip()
             if self.mode == "apps":
                 prompt = generate_prompt(self.dataset[task]).strip()
+            else:
+                prompt = self.dataset[task]["prompt"].strip()
             prompt = self.tokenizer.eos_token + prompt
             #if len(self.tokenizer.tokenize(prompt)) > self.model.config.n_ctx:
             #    prompt= prompt[:self.model.config.n_ctx]
@@ -79,13 +80,14 @@ def complete_code(accelerator, model, tokenizer, dataloader, n_tasks, batch_size
     """Generate multiple codes for each task in the dataset using multiple GPUs with accelerate.
     dataloader sends all the prompts from the evalution dataset to the model as the following:
     [p_0_0, p_0_1, ..., p_0_nc-1, p_1_0, ..., p_nt-1_nc-1] where nc is the number of copies of the prompt,
-    and nt is the number of tasks. nc is such that num_sample = nc * batch_size
+    and nt is the number of tasks. nc is such that num_samples(for each task)= nc * batch_size
     """
 
     gen_token_dict = defaultdict(list)  # dict of list of generated tokens
     for step, batch in tqdm(enumerate(dataloader)):
         with torch.no_grad():
-            gen_kwargs["stopping_criteria"][0].start_length = batch["ids"].shape[-1]
+            if mode != "apps":
+                gen_kwargs["stopping_criteria"][0].start_length = batch["ids"].shape[-1]
             generated_tokens = accelerator.unwrap_model(model).generate(
                 input_ids=batch["ids"][:, : batch["input_len"]], num_return_sequences=batch_size, **gen_kwargs
             )
@@ -109,5 +111,5 @@ def complete_code(accelerator, model, tokenizer, dataloader, n_tasks, batch_size
             if mode == "humaneval":
                 code_gens[task].append(remove_last_block(gen_code))
             elif mode == "apps":
-                code_gens[task].append(gen_code.replace(tokenizer.eos, ""))
+                code_gens[task].append(gen_code.replace(tokenizer.eos_token, ""))
     return code_gens

@@ -3,6 +3,7 @@ import fnmatch
 
 import transformers
 from transformers import  AutoModelForCausalLM, AutoTokenizer, HfArgumentParser
+from accelerate import Accelerator
 
 from arguments import EvalArguments
 from lm_eval.evaluator import Evaluator
@@ -30,7 +31,7 @@ def parse_args():
     parser = HfArgumentParser(EvalArguments)
     parser.add_argument("--model", required=True, help="Model to evaluate, provide repo name Hugging Face hub or local path")
     parser.add_argument("--tasks", default=None, choices=MultiChoice(ALL_TASKS), help=f"evalution tasks from {ALL_TASKS}")
-    parser.add_argument("--batch_size", type=int, default=1, help = "batch size for evaluation")
+    parser.add_argument("--batch_size", type=int, default=1, help = "batch size for evaluation on each worker, can be larger for HumanEval")
     parser.add_argument("--allow_code_execution", type=bool, default=False, help = "allow code evaluation to execute external/untrusted Python code on your machine")
     #parser.add_argument("--device", type=int, default=-1, help = "device for text-generation, -1 is CPU, else is GPU")
     parser.add_argument("--output_path", type=str, default="evaluation_results.json", help="path to save the results")
@@ -57,13 +58,15 @@ def main():
     else:
         task_names = pattern_match(args.tasks.split(","), ALL_TASKS)
 
-    print(f"Selected Tasks: {task_names}")
-
     model = AutoModelForCausalLM.from_pretrained(args.model)
     tokenizer = AutoTokenizer.from_pretrained(args.model)
     tokenizer.pad_token = tokenizer.eos_token
     
-    evaluator = Evaluator(model, tokenizer, args)
+    accelerator = Accelerator()
+    if accelerator.is_main_process:
+        print(f"Selected Tasks: {task_names}")
+        
+    evaluator = Evaluator(accelerator, model, tokenizer, args)
     results = {}
     for task in task_names:
         results[task] = evaluator.evaluate(task)
@@ -74,7 +77,8 @@ def main():
     }
 
     dumped = json.dumps(results, indent=2)
-    print(dumped)
+    if accelerator.is_main_process:
+        print(dumped)
 
     if args.output_path:
         with open(args.output_path, "w") as f:
