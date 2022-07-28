@@ -47,5 +47,6 @@ accelerate launch main.py \
 This repository is inspired from [EleutherAI's LM evaluation harness](https://github.com/EleutherAI/lm-evaluation-harness).
 
 ## To do:
+- [ ] finish APPS fix
 - [ ] add MBPP benchmark
 - [ ] add a table with CodeParrot evaluation scores
