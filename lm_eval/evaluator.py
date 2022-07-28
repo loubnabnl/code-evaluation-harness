@@ -5,15 +5,17 @@ from transformers import set_seed
 from datasets import load_dataset
 from evaluate import load
 
-from lm_eval import apps_generation
-from lm_eval import humaneval_generation
-from lm_eval import mbpp_generation
+from lm_eval.generation import (get_references,
+                                apps_parallel_generations,
+                                humaneval_parallel_generations,
+                                mbpp_parallel_generations)
+
 
 _WARNING = """
 ################################################################################
                                   !!!WARNING!!!
 ################################################################################
-The "code_eval" and "apps_metric" metrics you are about to use, execute untrusted 
+The "code_eval"/"apps_metric" you are about to use, execute untrusted 
 model-generated code in Python.
 Although it is highly unlikely that model-generated code will do something
 overtly malicious in response to this test suite, model-generated code may act
@@ -28,7 +30,8 @@ Once you have read this disclaimer and taken appropriate precautions, set the ar
 """
 
 class Evaluator():
-    def __init__(self, model, tokenizer, args):
+    def __init__(self, accelerator, model, tokenizer, args):
+        self.accelerator = accelerator
         self.model = model
         self.tokenizer = tokenizer
         self.args = args
@@ -49,17 +52,20 @@ class Evaluator():
 
         if task == "apps":
             dataset = load_dataset("codeparrot/apps", split="test", difficulties=[self.level_apps])
-            generations = apps_generation.make_parallel_generations(self.model, self.tokenizer, dataset, self.args, self.args.num_tasks_apps)
-            return generations, None
+            generations = apps_parallel_generations(self.accelerator, self.model, self.tokenizer, dataset, self.args, self.args.num_tasks_apps)
+            references = None
+            return generations, references
 
         elif task == "humaneval":
             dataset = load_dataset("openai_humaneval", split="test")
-            generations, references = humaneval_generation.make_parallel_generations(self.model, self.tokenizer, dataset, self.args, self.args.num_tasks_humaneval)
-            return generations, referencesnum_tasks_humaneval
+            generations = humaneval_parallel_generations(self.accelerator, self.model, self.tokenizer, dataset, self.args, self.args.num_tasks_humaneval)
+            references = get_references(dataset, self.args.num_tasks_humaneval)
+            return generations, references
 
         elif task == "mbpp":
             dataset = load_dataset("mbpp", split="test")
-            generations, references = mbpp_generation.make_generations(self.model, self.tokenizer, dataset, self.args, self.args.num_tasks_mbpp)
+            generations = mbpp_parellel_generations(self.accelerator, self.model, self.tokenizer, dataset, self.args, self.args.num_tasks_mbpp)
+            references = get_references(dataset, self.args.num_tasks_humaneval)
             return generations, references
 
         else:
@@ -72,18 +78,19 @@ class Evaluator():
             raise ValueError("Code evaluation is not enabled. Read the warning above carefully and then use `--allow_code_execution=True` flag to enable code evaluation.")
         generations, references = self.generate_text(task)
 
-        if task == "apps":
-            code_metric = load("codeparrot/apps_metric")
-            results = code_metric.compute(predictions=generations)
+        if self.accelerator.is_main_process:
+            if task == "apps":
+                code_metric = load("codeparrot/apps_metric")
+                results = code_metric.compute(predictions=generations)
 
-        else:
-            os.environ["HF_ALLOW_CODE_EVAL"] = "1"
-            # make sure tokenizer plays nice with multiprocessing
-            os.environ["TOKENIZERS_PARALLELISM"] = "false"
-            code_metric = load("code_eval")
+            else:
+                os.environ["HF_ALLOW_CODE_EVAL"] = "1"
+                # make sure tokenizer plays nice with multiprocessing
+                os.environ["TOKENIZERS_PARALLELISM"] = "false"
+                code_metric = load("code_eval")
 
-            results, _ = code_metric.compute(
-                references=references, predictions=generations, num_workers=self.args.num_workers
-            )
+                results, _ = code_metric.compute(
+                    references=references, predictions=generations, num_workers=self.args.num_workers
+                )
 
-        return results
+            return results
